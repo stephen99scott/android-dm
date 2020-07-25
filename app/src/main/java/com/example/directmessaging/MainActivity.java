@@ -3,6 +3,7 @@ package com.example.directmessaging;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.os.TestLooperManager;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -13,6 +14,7 @@ import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -97,7 +99,12 @@ public class MainActivity extends AppCompatActivity {
                 String input;
 
                 while(true) {
-                    input = in.readLine();
+                    try {
+                        input = in.readLine();
+                    } catch(IOException e){
+                        e.printStackTrace();
+                        break;
+                    }
                     setText(input);
                 }
             } catch(Exception e){
@@ -134,7 +141,8 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    status.setText("Connected to server at " + socket.getRemoteSocketAddress());
+                    String str = "Connected to server at " + socket.getRemoteSocketAddress();
+                    status.setText(str);
                 }
             });
         }
