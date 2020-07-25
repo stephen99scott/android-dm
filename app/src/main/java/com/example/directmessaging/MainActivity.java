@@ -4,23 +4,21 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import static java.text.DateFormat.getDateInstance;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -50,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
 
     class SocketOutThread implements Runnable{
         private TextView chatWindow = (TextView) findViewById(R.id.chatWindow);
-        private TextView sendMsg = (TextView) findViewById(R.id.EditText01);
 
         @Override
         public void run() {
@@ -69,9 +66,8 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String timeStamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+                    String timeStamp = getDateInstance().format(new Date());
                     chatWindow.append(timeStamp + ": You: " + text + "\n");
-                    sendMsg.setText("");
                 }
             });
         }
@@ -87,7 +83,12 @@ public class MainActivity extends AppCompatActivity {
                 String input;
 
                 while(true) {
-                    input = in.readLine();
+                    try {
+                        input = in.readLine();
+                    } catch(IOException e){
+                        e.printStackTrace();
+                        break;
+                    }
                     setText(input);
                 }
             } catch(Exception e){
@@ -99,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String timeStamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+                    String timeStamp = getDateInstance().format(new Date());
                     chatWindow.append(timeStamp + ": Client: " + text + "\n");
                 }
             });
@@ -124,7 +125,8 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    status.setText("Connected to server at " + socket.getRemoteSocketAddress());
+                    String str = "Connected to server at " + socket.getRemoteSocketAddress();
+                    status.setText(str);
                 }
             });
         }
