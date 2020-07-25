@@ -46,23 +46,12 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new ClientThread()).start();
     }
 
-    public void clearInputBox(View view){
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-            TextView inputBox = (TextView) findViewById(R.id.EditText01);
-                inputBox.setText("");
-            }
-        });
-    }
-
     public void sendMessage(View view){
         new Thread(new SocketOutThread()).start();
     }
 
     class SocketOutThread implements Runnable{
         private TextView chatWindow = (TextView) findViewById(R.id.chatWindow);
-        private TextView sendMsg = (TextView) findViewById(R.id.EditText01);
 
         @Override
         public void run() {
@@ -83,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     String timeStamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
                     chatWindow.append(timeStamp + ": You: " + text + "\n");
-                    sendMsg.setText("");
                 }
             });
         }
