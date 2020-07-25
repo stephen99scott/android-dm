@@ -44,6 +44,16 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new ClientThread()).start();
     }
 
+    public void clearInputBox(View view){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+            TextView inputBox = (TextView) findViewById(R.id.EditText01);
+                inputBox.setText("");
+            }
+        });
+    }
+
     public void sendMessage(View view){
         new Thread(new SocketOutThread()).start();
     }
