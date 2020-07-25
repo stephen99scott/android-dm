@@ -14,31 +14,36 @@
         android:id="@+id/status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Connecting to server..."
+        android:text="Idle"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"></TextView>
 
     <TextView
+        android:id="@+id/chatTitle"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="Chat Window:"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"></TextView>
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:visibility="gone"></TextView>
 
     <TextView
         android:id="@+id/chatWindow"
         android:layout_width="fill_parent"
-        android:layout_height="200dp"></TextView>
+        android:layout_height="200dp"
+        android:visibility="gone"></TextView>
 
     <EditText
-        android:id="@+id/EditText01"
+        android:id="@+id/msgBox"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:hint="Send a message."></EditText>
+        android:hint="Send a message."
+        android:visibility="gone"></EditText>
 
     <Button
-        android:id="@+id/myButton"
+        android:id="@+id/sendBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="sendMessage"
-        android:text="Send"></Button>
+        android:text="Send"
+        android:visibility="gone"></Button>
 
 </LinearLayout>
