@@ -127,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private TextView chatWindow = findViewById(R.id.chatWindow);
+        private EditText msgBox = findViewById(R.id.msgBox);
 
         private void setText(final String text) {
             runOnUiThread(new Runnable() {
@@ -134,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
                     chatWindow.append(timeStamp + ": You: " + text + "\n");
+                    msgBox.setText("");
                 }
             });
         }
