@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Direct Messaging</string>
+    <string name="hint">Type a message</string>
+</resources>
