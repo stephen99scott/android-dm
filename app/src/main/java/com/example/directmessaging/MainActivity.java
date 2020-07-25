@@ -24,6 +24,8 @@ import java.net.SocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static java.text.DateFormat.getDateInstance;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getName();
@@ -70,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String timeStamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+                    String timeStamp = getDateInstance().format(new Date());
                     chatWindow.append(timeStamp + ": You: " + text + "\n");
                 }
             });
@@ -104,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String timeStamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+                    String timeStamp = getDateInstance().format(new Date());
                     chatWindow.append(timeStamp + ": Client: " + text + "\n");
                 }
             });
