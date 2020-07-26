@@ -2,7 +2,10 @@ package com.example.directmessaging;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.Button;
@@ -21,7 +24,9 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.Date;
 
+
 import static java.text.DateFormat.getDateInstance;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,13 +45,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         TextView status = findViewById(R.id.status);
-        status.setText("Connecting to server");
+        String statusText = "Status: Connecting to server";
+        status.setText(statusText);
         /* Server connection thread */
         new Thread(new ConnectThread()).start();
     }
 
-    class ConnectThread implements Runnable {
 
+    class ConnectThread implements Runnable {
         @Override
         public void run() {
             /* Loop until socket is opened */
@@ -72,18 +78,26 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String str = "Connected to server at " + socket.getRemoteSocketAddress();
+                    String str = "";
+                    if (socket.getRemoteSocketAddress() != null){
+                        str = "Status: Connected to server at " + socket.getRemoteSocketAddress();
+                    }
+                    else{
+                        str = "Status: Connection failed";
+                    }
                     status.setText(str);
                 }
             });
         }
     }
 
+
     class ClientThread implements Runnable{
 
         @Override
         public void run() {
             setText();
+            enter_check();
             new Thread(new SocketInThread()).start();
         }
 
@@ -104,12 +118,48 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+
+        // checks if the enter key was pressed, if it was then send the message
+        private void enter_check(){
+            // needs to be on the UI thread since it's dealing with the UI
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    final EditText msgBox = findViewById(R.id.msgBox);
+                    // adds a text listener for the message box, everything that's entered goes through here
+                    msgBox.addTextChangedListener(new TextWatcher() {
+                        @Override
+                        public void afterTextChanged(Editable input) {
+                            // as soon as text in the message box changes, this function is run
+                            String str = String.valueOf(input);
+                            if (!str.equals("")) {
+                                String lastChar = str.substring(str.length() - 1);
+                                // check to see if client just hit enter
+                                if (lastChar.equals("\n")){
+                                    // they hit enter, so grab their input excluding the enter key
+                                    String message = str.substring(0, str.length() - 1);
+                                    // replace their message with their message minus enter key
+                                    msgBox.setText(message);
+                                    // send the message
+                                    new Thread(new SocketOutThread()).start();
+                                }
+                            }
+                        }
+                        // functions we don't use but TextWatcher needs to run
+                        public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {}
+                        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+                    });
+                }
+            });
+        }
     }
+
 
     /* Send button listener */
     public void sendMessage(View view) {
         new Thread(new SocketOutThread()).start();
     }
+
 
     class SocketOutThread implements Runnable {
 
@@ -118,6 +168,10 @@ public class MainActivity extends AppCompatActivity {
             try {
                 EditText et = findViewById(R.id.msgBox);
                 String str = et.getText().toString();
+                if (str.equals("")){
+                    return;
+                }
+                // send the actual message
                 PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
                 out.println(str);
                 setText(str);
@@ -134,12 +188,13 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
-                    chatWindow.append(timeStamp + ": You: " + text + "\n");
+                    chatWindow.append("You: " + text + "\n");
                     msgBox.setText("");
                 }
             });
         }
     }
+
 
     class SocketInThread implements Runnable {
 
@@ -170,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
-                    chatWindow.append(timeStamp + ": Client: " + text + "\n");
+                    chatWindow.append("Client: " + text + "\n");
                 }
             });
         }
