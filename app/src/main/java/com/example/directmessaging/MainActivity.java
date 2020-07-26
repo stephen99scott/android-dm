@@ -2,9 +2,15 @@ package com.example.directmessaging;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -23,14 +29,15 @@ import java.util.Date;
 
 import static java.text.DateFormat.getDateInstance;
 
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getName();
-
     private Socket socket;
 
     private static final int SERVER_PORT = 12345;
-    private static final String SERVER_IP = "0.0.0.0";
+    //private static final String SERVER_IP = "0.0.0.0";
+    private static final String SERVER_IP = "173.238.107.120";
 
     private SocketAddress sockAddr = new InetSocketAddress(SERVER_IP, SERVER_PORT);
 
@@ -40,59 +47,74 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         TextView status = findViewById(R.id.status);
-        status.setText("Connecting to server");
+        String statusText = "Status: Connecting to server...";
+        status.setText(statusText);
         /* Server connection thread */
         new Thread(new ConnectThread()).start();
     }
 
-    class ConnectThread implements Runnable {
 
+    class ConnectThread implements Runnable {
         @Override
         public void run() {
             /* Loop until socket is opened */
+            Log.d("bruh", "ab to try to do connection stuff");
             while (true) {
                 try {
                     socket = new Socket();
                     break;
                 } catch (Exception e) {}
             }
-            /* Try to connect to server with infinite timeout */
+            /* Try to connect to server with infinite timeout NOTE: this isn't actually infinite
+               timeout, it times out after exactly 2 minutes, so I set up a catch, and only start
+               the client thread after it connects */
+            TextView status = findViewById(R.id.status);
             try {
                 socket.connect(sockAddr, 0);
+                String str = "Status: Connected to " + sockAddr;
+                status.setText(str);
+                new Thread(new ClientThread()).start();
             } catch (IOException e) {
                 e.printStackTrace();
+                Log.d("bruh", String.valueOf(e));
+                String str = "Status: Connection failed";
+                status.setText(str);
             }
-            setText();
-            new Thread(new ClientThread()).start();
-        }
-
-        private TextView status = findViewById(R.id.status);
-
-        private void setText() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    String str = "Connected to server at " + socket.getRemoteSocketAddress();
-                    status.setText(str);
-                }
-            });
         }
     }
 
-    class ClientThread implements Runnable{
 
-        @Override
-        public void run() {
-            setText();
-            new Thread(new SocketInThread()).start();
-        }
+    /* Thread that deals with anything client-side, ie. visibility of ui, textwatchers, etc. */
+    class ClientThread implements Runnable {
 
         private TextView chatTitle = findViewById(R.id.chatTitle);
         private TextView chatWindow = findViewById(R.id.chatWindow);
         private EditText msgBox = findViewById(R.id.msgBox);
         private Button sendBtn = findViewById(R.id.sendBtn);
 
-        private void setText(){
+        @Override
+        public void run() {
+            new Thread(new SocketInThread()).start();
+            Log.d("bruh", "starting client thread");
+            /* we display the info in the gui, and start checking for send requests */
+            gui_ini();
+            msgBox.setOnEditorActionListener(editorListener);
+
+        }
+
+        /* keyboard action listener */
+        private TextView.OnEditorActionListener editorListener = new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+                /* check for the ime action of next (the enter button on keyboard) */
+                if (actionId == EditorInfo.IME_ACTION_NEXT) {
+                    new Thread(new SocketOutThread()).start();
+                }
+                return true;
+            }
+        };
+
+        private void gui_ini() {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -106,10 +128,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+
     /* Send button listener */
     public void sendMessage(View view) {
         new Thread(new SocketOutThread()).start();
     }
+
 
     class SocketOutThread implements Runnable {
 
@@ -118,6 +143,10 @@ public class MainActivity extends AppCompatActivity {
             try {
                 EditText et = findViewById(R.id.msgBox);
                 String str = et.getText().toString();
+                if (str.equals("")){
+                    return;
+                }
+                // send the actual message
                 PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
                 out.println(str);
                 setText(str);
@@ -134,12 +163,13 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
-                    chatWindow.append(timeStamp + ": You: " + text + "\n");
+                    chatWindow.append("You: " + text + "\n");
                     msgBox.setText("");
                 }
             });
         }
     }
+
 
     class SocketInThread implements Runnable {
 
@@ -170,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
-                    chatWindow.append(timeStamp + ": Client: " + text + "\n");
+                    chatWindow.append("Client: " + text + "\n");
                 }
             });
         }
