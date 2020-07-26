@@ -73,6 +73,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
+            setText();
+            new Thread(new ClientThread()).start();
         }
     }
 
