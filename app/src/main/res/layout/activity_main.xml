@@ -9,7 +9,7 @@
     <TextView
         android:id="@+id/status"
         android:layout_width="match_parent"
-        android:layout_height="20dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
@@ -26,8 +26,8 @@
 
     <TextView
         android:id="@+id/chatTitle"
-        android:layout_width="365dp"
-        android:layout_height="42dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
@@ -48,7 +48,7 @@
     <Button
         android:id="@+id/sendBtn"
         style="@style/Widget.AppCompat.Button"
-        android:layout_width="76dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
@@ -65,30 +65,30 @@
 
     <EditText
         android:id="@+id/msgBox"
-        android:layout_width="327dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_marginStart="1dp"
+        android:layout_marginLeft="1dp"
         android:layout_marginTop="302dp"
         android:hapticFeedbackEnabled="true"
         android:hint="Send a message."
+        android:imeOptions="actionNext"
+        android:inputType="text"
         android:singleLine="false"
         android:textColor="#DCDCDC"
         android:textColorHighlight="#DCDCDC"
         android:textColorHint="#80DCDCDC"
         android:textColorLink="#DCDCDC"
         android:textIsSelectable="false"
-        android:visibility="visible"
-        android:inputType="text"
-        android:imeOptions="actionNext"
-        android:layout_marginLeft="1dp"></EditText>
+        android:visibility="visible"></EditText>
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="50dp"
-        android:layout_height="42dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_marginStart="0dp"

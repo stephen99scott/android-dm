@@ -4,8 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -117,8 +115,6 @@ public class MainActivity extends AppCompatActivity {
 
     class ClientThread implements Runnable{
     /* Thread that deals with anything client-side, ie. visibility of ui, textwatchers, etc. */
-    class ClientThread implements Runnable {
-
         private TextView chatTitle = findViewById(R.id.chatTitle);
         private TextView chatWindow = findViewById(R.id.chatWindow);
         private EditText msgBox = findViewById(R.id.msgBox);
@@ -126,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
+            new Thread(new SocketInThread()).start();
             Log.d("bruh", "starting client thread");
             /* we display the info in the gui, and start checking for send requests */
             gui_ini();
