@@ -7,7 +7,10 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -30,7 +33,6 @@ import static java.text.DateFormat.getDateInstance;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getName();
-
     private Socket socket;
 
     private static final int SERVER_PORT = 12345;
@@ -44,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         TextView status = findViewById(R.id.status);
-        String statusText = "Status: Connecting to server";
+        String statusText = "Status: Connecting to server...";
         status.setText(statusText);
         /* Server connection thread */
         new Thread(new ConnectThread()).start();
@@ -55,57 +57,62 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             /* Loop until socket is opened */
+            Log.d("bruh", "ab to try to do connection stuff");
             while (true) {
                 try {
                     socket = new Socket();
                     break;
                 } catch (Exception e) {}
             }
-            /* Try to connect to server with infinite timeout */
+            /* Try to connect to server with infinite timeout NOTE: this isn't actually infinite
+               timeout, it times out after exactly 2 minutes, so I set up a catch, and only start
+               the client thread after it connects */
+            TextView status = findViewById(R.id.status);
             try {
                 socket.connect(sockAddr, 0);
+                String str = "Status: Connected to " + sockAddr;
+                status.setText(str);
+                new Thread(new ClientThread()).start();
             } catch (IOException e) {
                 e.printStackTrace();
+                Log.d("bruh", String.valueOf(e));
+                String str = "Status: Connection failed";
+                status.setText(str);
             }
-            setText();
-            new Thread(new ClientThread()).start();
-        }
-
-        private TextView status = findViewById(R.id.status);
-
-        private void setText() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    String str = "";
-                    if (socket.getRemoteSocketAddress() != null){
-                        str = "Status: Connected to server at " + socket.getRemoteSocketAddress();
-                    }
-                    else{
-                        str = "Status: Connection failed";
-                    }
-                    status.setText(str);
-                }
-            });
         }
     }
 
 
-    class ClientThread implements Runnable{
-
-        @Override
-        public void run() {
-            setText();
-            enter_check();
-            new Thread(new SocketInThread()).start();
-        }
+    /* Thread that deals with anything client-side, ie. visibility of ui, textwatchers, etc. */
+    class ClientThread implements Runnable {
 
         private TextView chatTitle = findViewById(R.id.chatTitle);
         private TextView chatWindow = findViewById(R.id.chatWindow);
         private EditText msgBox = findViewById(R.id.msgBox);
         private Button sendBtn = findViewById(R.id.sendBtn);
 
-        private void setText(){
+        @Override
+        public void run() {
+            Log.d("bruh", "starting client thread");
+            /* we display the info in the gui, and start checking for send requests */
+            gui_ini();
+            msgBox.setOnEditorActionListener(editorListener);
+
+        }
+
+        /* keyboard action listener */
+        private TextView.OnEditorActionListener editorListener = new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+                /* check for the ime action of next (the enter button on keyboard) */
+                if (actionId == EditorInfo.IME_ACTION_NEXT) {
+                    new Thread(new SocketOutThread()).start();
+                }
+                return true;
+            }
+        };
+
+        private void gui_ini() {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -117,41 +124,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
-        // checks if the enter key was pressed, if it was then send the message
-        private void enter_check(){
-            // needs to be on the UI thread since it's dealing with the UI
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    final EditText msgBox = findViewById(R.id.msgBox);
-                    // adds a text listener for the message box, everything that's entered goes through here
-                    msgBox.addTextChangedListener(new TextWatcher() {
-                        @Override
-                        public void afterTextChanged(Editable input) {
-                            // as soon as text in the message box changes, this function is run
-                            String str = String.valueOf(input);
-                            if (!str.equals("")) {
-                                String lastChar = str.substring(str.length() - 1);
-                                // check to see if client just hit enter
-                                if (lastChar.equals("\n")){
-                                    // they hit enter, so grab their input excluding the enter key
-                                    String message = str.substring(0, str.length() - 1);
-                                    // replace their message with their message minus enter key
-                                    msgBox.setText(message);
-                                    // send the message
-                                    new Thread(new SocketOutThread()).start();
-                                }
-                            }
-                        }
-                        // functions we don't use but TextWatcher needs to run
-                        public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {}
-                        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-                    });
-                }
-            });
-        }
     }
+
 
 
     /* Send button listener */

@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#1E1E1E">
 
     <TextView
         android:id="@+id/status"
@@ -16,7 +17,6 @@
         android:layout_marginTop="0dp"
         android:layout_marginEnd="0dp"
         android:layout_marginRight="0dp"
-        android:background="#1E1E1E"
         android:gravity="center_vertical"
         android:paddingLeft="10dp"
         android:text="Idle"
@@ -34,7 +34,6 @@
         android:layout_marginTop="20dp"
         android:layout_marginEnd="0dp"
         android:layout_marginRight="0dp"
-        android:background="#1E1E1E"
         android:gravity="center_vertical"
         android:hapticFeedbackEnabled="false"
         android:paddingLeft="10dp"
@@ -43,8 +42,7 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:textColor="#DCDCDC"
         android:textSize="24sp"
-        android:textStyle="bold"
-        android:typeface="monospace"
+        android:typeface="normal"
         android:visibility="visible"></TextView>
 
     <Button
@@ -55,16 +53,15 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
         android:layout_centerVertical="true"
         android:layout_marginStart="334dp"
         android:layout_marginLeft="334dp"
-        android:layout_marginEnd="1dp"
         android:layout_marginBottom="380dp"
-        android:editable="false"
         android:onClick="sendMessage"
         android:text="Send"
-        android:visibility="visible"></Button>
+        android:visibility="gone"></Button>
 
     <EditText
         android:id="@+id/msgBox"
@@ -74,11 +71,19 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_marginStart="1dp"
-        android:layout_marginLeft="1dp"
         android:layout_marginTop="302dp"
         android:hapticFeedbackEnabled="true"
         android:hint="Send a message."
-        android:visibility="visible"></EditText>
+        android:singleLine="false"
+        android:textColor="#DCDCDC"
+        android:textColorHighlight="#DCDCDC"
+        android:textColorHint="#80DCDCDC"
+        android:textColorLink="#DCDCDC"
+        android:textIsSelectable="false"
+        android:visibility="visible"
+        android:inputType="text"
+        android:imeOptions="actionNext"
+        android:layout_marginLeft="1dp"></EditText>
 
     <ImageView
         android:id="@+id/imageView"
@@ -88,18 +93,20 @@
         android:layout_alignParentTop="true"
         android:layout_marginStart="0dp"
         android:layout_marginTop="20dp"
-        android:background="#1E1E1E"
         app:srcCompat="@drawable/abc_vector_test" />
 
     <TextView
         android:id="@+id/chatWindow"
-        android:layout_width="match_parent"
-        android:layout_height="239dp"
+        android:layout_width="395dp"
+        android:layout_height="233dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="-2dp"
-        android:layout_marginLeft="-2dp"
-        android:layout_marginTop="62dp" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="63dp"
+        android:textColor="#E6E6E6"
+        android:textColorHint="#FFFFFF" />
 
 </RelativeLayout>
