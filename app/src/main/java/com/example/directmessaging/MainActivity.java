@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -32,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int SERVER_PORT = 12345;
     private static final String SERVER_IP = "0.0.0.0";
 
+    private static final String CONNECTION_LOST = "connect-lost";
+
     private SocketAddress sockAddr = new InetSocketAddress(SERVER_IP, SERVER_PORT);
 
     @Override
@@ -40,7 +43,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         TextView status = findViewById(R.id.status);
-        status.setText("Connecting to server");
+        String statusStr = "Connecting to server";
+        status.setText(statusStr);
         /* Server connection thread */
         new Thread(new ConnectThread()).start();
     }
@@ -54,13 +58,20 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     socket = new Socket();
                     break;
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             /* Try to connect to server with infinite timeout */
-            try {
-                socket.connect(sockAddr, 0);
-            } catch (IOException e) {
-                e.printStackTrace();
+            while(true) {
+                try {
+                    socket.connect(sockAddr, 20000);
+                    break;
+                } catch (ConnectException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             setText();
             new Thread(new ClientThread()).start();
@@ -74,6 +85,35 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     String str = "Connected to server at " + socket.getRemoteSocketAddress();
                     status.setText(str);
+                }
+            });
+        }
+    }
+
+    class ReconnectThread implements Runnable{
+
+        @Override
+        public void run() {
+            setText();
+            new Thread(new ConnectThread()).start();
+        }
+
+        private TextView status = findViewById(R.id.status);
+        private TextView chatTitle = findViewById(R.id.chatTitle);
+        private TextView chatWindow = findViewById(R.id.chatWindow);
+        private EditText msgBox = findViewById(R.id.msgBox);
+        private Button sendBtn = findViewById(R.id.sendBtn);
+
+        private void setText() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String statusStr = "Connecting to server";
+                    status.setText(statusStr);
+                    chatTitle.setVisibility(View.GONE);
+                    chatWindow.setVisibility(View.GONE);
+                    msgBox.setVisibility(View.GONE);
+                    sendBtn.setVisibility(View.GONE);
                 }
             });
         }
@@ -152,6 +192,11 @@ public class MainActivity extends AppCompatActivity {
                 while (true) {
                     try {
                         input = in.readLine();
+                        if (input.equals(CONNECTION_LOST)){
+                            socket.close();
+                            new Thread(new ReconnectThread()).start();
+                            return;
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                         break;
