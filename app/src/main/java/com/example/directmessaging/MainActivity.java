@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -32,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int SERVER_PORT = 12345;
     private static final String SERVER_IP = "0.0.0.0";
 
+    private static final String CONNECTION_LOST = "connect-lost";
+
     private SocketAddress sockAddr = new InetSocketAddress(SERVER_IP, SERVER_PORT);
 
     @Override
@@ -40,7 +43,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         TextView status = findViewById(R.id.status);
-        status.setText("Connecting to server");
+        String statusStr = "Connecting to server";
+        status.setText(statusStr);
         /* Server connection thread */
         new Thread(new ConnectThread()).start();
     }
@@ -53,14 +57,17 @@ public class MainActivity extends AppCompatActivity {
             while (true) {
                 try {
                     socket = new Socket();
+                    socket.connect(sockAddr, 0);
                     break;
-                } catch (Exception e) {}
-            }
-            /* Try to connect to server with infinite timeout */
-            try {
-                socket.connect(sockAddr, 0);
-            } catch (IOException e) {
-                e.printStackTrace();
+                } catch (Exception e) {
+                    Log.i(TAG, "Failed to connect");
+                    try{
+                        socket.close();
+                        Log.i(TAG, "Socket closed");
+                    } catch(IOException IOe){
+                        Log.i(TAG, "Failed to close socket");
+                    }
+                }
             }
             setText();
             new Thread(new ClientThread()).start();
@@ -74,6 +81,31 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     String str = "Connected to server at " + socket.getRemoteSocketAddress();
                     status.setText(str);
+                }
+            });
+        }
+    }
+
+    class ReconnectThread implements Runnable{
+
+        @Override
+        public void run() {
+            setText();
+            new Thread(new ConnectThread()).start();
+        }
+
+        private TextView status = findViewById(R.id.status);
+        private EditText msgBox = findViewById(R.id.msgBox);
+        private Button sendBtn = findViewById(R.id.sendBtn);
+
+        private void setText() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String statusStr = "Connecting to server";
+                    status.setText(statusStr);
+                    msgBox.setVisibility(View.GONE);
+                    sendBtn.setVisibility(View.GONE);
                 }
             });
         }
@@ -152,6 +184,12 @@ public class MainActivity extends AppCompatActivity {
                 while (true) {
                     try {
                         input = in.readLine();
+                        if (input.equals(CONNECTION_LOST)){
+                            socket.close();
+                            new Thread(new ReconnectThread()).start();
+                            Log.i(TAG, "End thread");
+                            return;
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                         break;
