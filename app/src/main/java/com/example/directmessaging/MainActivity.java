@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
             while (true) {
                 try {
                     socket = new Socket();
-                    socket.connect(sockAddr, 0);
+                    socket.connect(sockAddr, 3000);
                     break;
                 } catch (Exception e) {
                     Log.i(TAG, "Failed to connect");
@@ -122,10 +122,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
+            gui_ini();
             new Thread(new SocketInThread()).start();
             Log.d("bruh", "starting client thread");
             /* we display the info in the gui, and start checking for send requests */
-            gui_ini();
             msgBox.setOnEditorActionListener(editorListener);
 
         }
