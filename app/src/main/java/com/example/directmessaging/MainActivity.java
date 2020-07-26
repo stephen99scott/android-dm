@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -57,20 +57,16 @@ public class MainActivity extends AppCompatActivity {
             while (true) {
                 try {
                     socket = new Socket();
+                    socket.connect(sockAddr, 0);
                     break;
                 } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            /* Try to connect to server with infinite timeout */
-            while(true) {
-                try {
-                    socket.connect(sockAddr, 20000);
-                    break;
-                } catch (ConnectException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    Log.i(TAG, "Failed to connect");
+                    try{
+                        socket.close();
+                        Log.i(TAG, "Socket closed");
+                    } catch(IOException IOe){
+                        Log.i(TAG, "Failed to close socket");
+                    }
                 }
             }
             setText();
@@ -99,8 +95,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private TextView status = findViewById(R.id.status);
-        private TextView chatTitle = findViewById(R.id.chatTitle);
-        private TextView chatWindow = findViewById(R.id.chatWindow);
         private EditText msgBox = findViewById(R.id.msgBox);
         private Button sendBtn = findViewById(R.id.sendBtn);
 
@@ -110,8 +104,6 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     String statusStr = "Connecting to server";
                     status.setText(statusStr);
-                    chatTitle.setVisibility(View.GONE);
-                    chatWindow.setVisibility(View.GONE);
                     msgBox.setVisibility(View.GONE);
                     sendBtn.setVisibility(View.GONE);
                 }
@@ -195,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
                         if (input.equals(CONNECTION_LOST)){
                             socket.close();
                             new Thread(new ReconnectThread()).start();
+                            Log.i(TAG, "End thread");
                             return;
                         }
                     } catch (IOException e) {
