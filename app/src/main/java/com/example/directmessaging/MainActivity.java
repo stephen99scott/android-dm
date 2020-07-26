@@ -76,6 +76,18 @@ public class MainActivity extends AppCompatActivity {
             setText();
             new Thread(new ClientThread()).start();
         }
+        
+        private TextView status = findViewById(R.id.status);
+
+        private void setText() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String str = "Connected to server at " + socket.getRemoteSocketAddress();
+                    status.setText(str);
+                }
+            });
+        }
     }
 
     class ReconnectThread implements Runnable{
