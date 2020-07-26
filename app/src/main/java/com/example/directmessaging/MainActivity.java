@@ -38,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int SERVER_PORT = 12345;
     private static final String SERVER_IP = "0.0.0.0";
 
+    private static final String CONNECTION_LOST = "connect-lost";
+
     private SocketAddress sockAddr = new InetSocketAddress(SERVER_IP, SERVER_PORT);
 
     @Override
@@ -46,43 +48,60 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         TextView status = findViewById(R.id.status);
-        String statusText = "Status: Connecting to server...";
-        status.setText(statusText);
+        String statusStr = "Status: Connecting to server";
+        status.setText(statusStr);
         /* Server connection thread */
         new Thread(new ConnectThread()).start();
     }
-
 
     class ConnectThread implements Runnable {
         @Override
         public void run() {
             /* Loop until socket is opened */
-            Log.d("bruh", "ab to try to do connection stuff");
             while (true) {
                 try {
                     socket = new Socket();
+                    socket.connect(sockAddr, 0);
                     break;
-                } catch (Exception e) {}
-            }
-            /* Try to connect to server with infinite timeout NOTE: this isn't actually infinite
-               timeout, it times out after exactly 2 minutes, so I set up a catch, and only start
-               the client thread after it connects */
-            TextView status = findViewById(R.id.status);
-            try {
-                socket.connect(sockAddr, 0);
-                String str = "Status: Connected to " + sockAddr;
-                status.setText(str);
-                new Thread(new ClientThread()).start();
-            } catch (IOException e) {
-                e.printStackTrace();
-                Log.d("bruh", String.valueOf(e));
-                String str = "Status: Connection failed";
-                status.setText(str);
+                } catch (Exception e) {
+                    Log.i(TAG, "Failed to connect");
+                    try{
+                        socket.close();
+                        Log.i(TAG, "Socket closed");
+                    } catch(IOException IOe){
+                        Log.i(TAG, "Failed to close socket");
+                    }
+                }
             }
         }
     }
 
+    class ReconnectThread implements Runnable{
 
+        @Override
+        public void run() {
+            setText();
+            new Thread(new ConnectThread()).start();
+        }
+
+        private TextView status = findViewById(R.id.status);
+        private EditText msgBox = findViewById(R.id.msgBox);
+        private Button sendBtn = findViewById(R.id.sendBtn);
+
+        private void setText() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String statusStr = "Connecting to server";
+                    status.setText(statusStr);
+                    msgBox.setVisibility(View.GONE);
+                    sendBtn.setVisibility(View.GONE);
+                }
+            });
+        }
+    }
+
+    class ClientThread implements Runnable{
     /* Thread that deals with anything client-side, ie. visibility of ui, textwatchers, etc. */
     class ClientThread implements Runnable {
 
@@ -180,6 +199,12 @@ public class MainActivity extends AppCompatActivity {
                 while (true) {
                     try {
                         input = in.readLine();
+                        if (input.equals(CONNECTION_LOST)){
+                            socket.close();
+                            new Thread(new ReconnectThread()).start();
+                            Log.i(TAG, "End thread");
+                            return;
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                         break;
