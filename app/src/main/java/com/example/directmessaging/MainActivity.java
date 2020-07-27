@@ -180,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
                     chatWindow.append(timeStamp + ": You: " + text + "\n");
+                    scroll(chatWindow);
                     msgBox.setText("");
                 }
             });
@@ -222,8 +223,14 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
                     chatWindow.append(timeStamp + ": Client: " + text + "\n");
+                    scroll(chatWindow);
                 }
             });
         }
+    }
+
+    private void scroll(TextView tv){
+        final int scrollAmount = tv.getLayout().getLineTop(tv.getLineCount()) - tv.getHeight();
+        tv.scrollTo(0, Math.max(scrollAmount, 0));
     }
 }
