@@ -20,6 +20,8 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Date;
 
 import static java.text.DateFormat.getDateInstance;
@@ -53,20 +55,31 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
-            /* Loop until socket is opened */
+            /* Create socket */
+            socket = new Socket();
+            /* Loop until a connection is made */
             while (true) {
                 try {
-                    socket = new Socket();
-                    socket.connect(sockAddr, 0);
+                    /* Try to connect for a second */
+                    socket.connect(sockAddr, 2000);
                     break;
-                } catch (Exception e) {
-                    Log.i(TAG, "Failed to connect");
-                    try{
+                } catch (SocketTimeoutException | SocketException Se) {
+                    /* Exception causes socket to close - open new */
+                    try {
                         socket.close();
-                        Log.i(TAG, "Socket closed");
-                    } catch(IOException IOe){
-                        Log.i(TAG, "Failed to close socket");
+                    } catch (IOException IOe) {
+                        IOe.printStackTrace();
                     }
+                    try{
+                        /* Wait before attempting to connect again */
+                        Thread.sleep(1000);
+                    } catch(InterruptedException Ie){
+                        Ie.printStackTrace();
+                    }
+                    socket = new Socket();
+                } catch(IOException e){
+                    /* A real error */
+                    e.printStackTrace();
                 }
             }
             setText();
