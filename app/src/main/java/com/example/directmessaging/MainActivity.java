@@ -1,11 +1,15 @@
 package com.example.directmessaging;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -43,12 +47,32 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        /* new activity button -------------------------------------------------------------------*/
+        Button button = (Button) findViewById(R.id.buttonBack);
+        button.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                goBack();
+            }
+        });
+        /* end new activity button ---------------------------------------------------------------*/
+
         TextView status = findViewById(R.id.status);
         String statusStr = "Connecting to server";
         status.setText(statusStr);
         /* Server connection thread */
         new Thread(new ConnectThread()).start();
     }
+
+
+    /* new activity switch -----------------------------------------------------------------------*/
+    private void goBack() {
+        Intent intent = new Intent(this, MainView.class);
+        startActivity(intent);
+    }
+    /* end new activity switch -------------------------------------------------------------------*/
+
 
     class ConnectThread implements Runnable {
 
