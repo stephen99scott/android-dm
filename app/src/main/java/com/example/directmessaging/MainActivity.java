@@ -3,11 +3,9 @@ package com.example.directmessaging;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -83,13 +81,13 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
-            setText();
+            setStatus();
             new Thread(new ClientThread()).start();
         }
 
         private TextView status = findViewById(R.id.status);
 
-        private void setText() {
+        private void setStatus() {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -105,22 +103,20 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
-            setText();
+            updateUI();
             new Thread(new ConnectThread()).start();
         }
 
         private TextView status = findViewById(R.id.status);
         private EditText msgBox = findViewById(R.id.msgBox);
-        private Button sendBtn = findViewById(R.id.sendBtn);
 
-        private void setText() {
+        private void updateUI() {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String statusStr = "Connecting to server";
+                    String statusStr = "Reconnecting to server";
                     status.setText(statusStr);
                     msgBox.setVisibility(View.GONE);
-                    sendBtn.setVisibility(View.GONE);
                 }
             });
         }
@@ -153,25 +149,13 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
-            gui_ini();
+            initUI();
             new Thread(new SocketInThread()).start();
-            /* we display the info in the gui, and start checking for send requests */
+            /* Listen to keyboard for enter (send) */
             msgBox.setOnEditorActionListener(editorListener);
         }
 
-        /* keyboard action listener */
-        private TextView.OnEditorActionListener editorListener = new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
-                /* check for the ime action of next (the enter button on keyboard) */
-                if (actionId == EditorInfo.IME_ACTION_NEXT) {
-                    new Thread(new SocketOutThread()).start();
-                }
-                return true;
-            }
-        };
-
-        private void gui_ini(){
+        private void initUI(){
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -242,7 +226,6 @@ public class MainActivity extends AppCompatActivity {
                         if (input.equals(CONNECTION_LOST)){
                             disconnect();
                             new Thread(new ReconnectThread()).start();
-                            Log.i(TAG, "End thread");
                             return;
                         }
                     } catch (IOException e) {
