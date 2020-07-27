@@ -122,30 +122,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-    /* disconnects the client from the server and updates the status, should not be its own thread
-          since we don't want to try to reconnect before the client is disconnected */
-    public void disconnect() {
-        TextView status = findViewById(R.id.status);
-        try {
-            Log.i(TAG, "about to close socket");
-            socket.close();
-            Log.i(TAG, "closed socket");
-            String str = "Disconnected";
-            status.setText(str);
-        } catch (Exception e) {
-            Log.i(TAG, "socket somehow already closed");
-            e.printStackTrace();
-        }
-    }
-
-
     class ClientThread implements Runnable{
-        /* Thread that deals with anything client-side, ie. visibility of ui, textwatchers, etc. */
+
         private TextView chatTitle = findViewById(R.id.chatTitle);
         private TextView chatWindow = findViewById(R.id.chatWindow);
         private EditText msgBox = findViewById(R.id.msgBox);
-        private Button sendBtn = findViewById(R.id.sendBtn);
 
         @Override
         public void run() {
@@ -163,7 +144,6 @@ public class MainActivity extends AppCompatActivity {
                     chatWindow.setVisibility(View.VISIBLE);
                     chatWindow.setMovementMethod(new ScrollingMovementMethod());
                     msgBox.setVisibility(View.VISIBLE);
-                    sendBtn.setVisibility(View.VISIBLE);
                 }
             });
         }
@@ -224,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         input = in.readLine();
                         if (input.equals(CONNECTION_LOST)){
-                            disconnect();
+                            socket.close();
                             new Thread(new ReconnectThread()).start();
                             return;
                         }
