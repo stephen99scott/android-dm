@@ -147,14 +147,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+
+        /* Keyboard action listener */
+        private TextView.OnEditorActionListener editorListener = new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+                /* Check for the ime action of next (the enter button on keyboard) */
+                if (actionId == EditorInfo.IME_ACTION_NEXT) {
+                    new Thread(new SocketOutThread()).start();
+                }
+                return true;
+            }
+        };
     }
-
-
-    /* Send button listener */
-    public void sendMessage(View view) {
-        new Thread(new SocketOutThread()).start();
-    }
-
 
     class SocketOutThread implements Runnable {
 
@@ -183,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
                     chatWindow.append(timeStamp + ": You: " + text + "\n");
+                    scroll(chatWindow);
                     if (msgBox.length() > 0) {
                         msgBox.getText().clear();
                     }
@@ -227,8 +233,14 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
                     chatWindow.append(timeStamp + ": Client: " + text + "\n");
+                    scroll(chatWindow);
                 }
             });
         }
+    }
+
+    private void scroll(TextView tv){
+        final int scrollAmount = tv.getLayout().getLineTop(tv.getLineCount()) - tv.getHeight();
+        tv.scrollTo(0, Math.max(scrollAmount, 0));
     }
 }
