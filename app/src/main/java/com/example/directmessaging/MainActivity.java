@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import static java.text.DateFormat.getDateInstance;
@@ -46,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         TextView status = findViewById(R.id.status);
-        String statusStr = "Status: Connecting to server";
+        String statusStr = "Connecting to server";
         status.setText(statusStr);
         /* Server connection thread */
         new Thread(new ConnectThread()).start();
@@ -59,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
             while (true) {
                 try {
                     socket = new Socket();
-                    socket.connect(sockAddr, 3000);
+                    socket.connect(sockAddr, 1000);
                     break;
                 } catch (Exception e) {
                     Log.i(TAG, "Failed to connect");
@@ -69,6 +70,13 @@ public class MainActivity extends AppCompatActivity {
                     } catch(IOException IOe){
                         Log.i(TAG, "Failed to close socket");
                     }
+                }
+                /* we don't need to be attempting to connect constantly, do it once per second */
+                try {
+                    Log.i(TAG, "waiting 1s before trying to connect again");
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
             setText();
@@ -110,6 +118,22 @@ public class MainActivity extends AppCompatActivity {
                     sendBtn.setVisibility(View.GONE);
                 }
             });
+        }
+    }
+
+    /* disconnects the client from the server and updates the status, should not be its own thread
+          since we don't want to try to reconnect before the client is disconnected */
+    public void disconnect() {
+        TextView status = findViewById(R.id.status);
+        try {
+            Log.i(TAG, "about to close socket");
+            socket.close();
+            Log.i(TAG, "closed socket");
+            String str = "Disconnected";
+            status.setText(str);
+        } catch (Exception e) {
+            Log.i(TAG, "socket somehow already closed");
+            e.printStackTrace();
         }
     }
 
@@ -156,13 +180,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
     /* Send button listener */
     public void sendMessage(View view) {
         new Thread(new SocketOutThread()).start();
     }
-
 
     class SocketOutThread implements Runnable {
 
@@ -192,7 +213,9 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
                     chatWindow.append("You: " + text + "\n");
-                    msgBox.setText("");
+                    if (msgBox.length() > 0) {
+                        msgBox.getText().clear();
+                    }
                 }
             });
         }
@@ -211,7 +234,8 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         input = in.readLine();
                         if (input.equals(CONNECTION_LOST)){
-                            socket.close();
+                            // socket.close();
+                            disconnect();
                             new Thread(new ReconnectThread()).start();
                             Log.i(TAG, "End thread");
                             return;
