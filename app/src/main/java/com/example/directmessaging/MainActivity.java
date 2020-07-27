@@ -232,7 +232,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
-                    chatWindow.append(timeStamp + ": Client: " + text + "\n");
+                    chatWindow.append(timeStamp + ": Client " + text + "\n");
                     scroll(chatWindow);
                 }
             });
