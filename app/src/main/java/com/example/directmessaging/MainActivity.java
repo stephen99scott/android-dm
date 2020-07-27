@@ -1,15 +1,13 @@
 package com.example.directmessaging;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
-import android.widget.Button;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
-
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -20,9 +18,12 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Date;
 
 import static java.text.DateFormat.getDateInstance;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -53,29 +54,40 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void run() {
-            /* Loop until socket is opened */
+            /* Create socket */
+            socket = new Socket();
+            /* Loop until a connection is made */
             while (true) {
                 try {
-                    socket = new Socket();
-                    socket.connect(sockAddr, 0);
+                    /* Try to connect for a second */
+                    socket.connect(sockAddr, 2000);
                     break;
-                } catch (Exception e) {
-                    Log.i(TAG, "Failed to connect");
-                    try{
+                } catch (SocketTimeoutException | SocketException Se) {
+                    /* Exception causes socket to close - open new */
+                    try {
                         socket.close();
-                        Log.i(TAG, "Socket closed");
-                    } catch(IOException IOe){
-                        Log.i(TAG, "Failed to close socket");
+                    } catch (IOException IOe) {
+                        IOe.printStackTrace();
                     }
+                    try{
+                        /* Wait before attempting to connect again */
+                        Thread.sleep(1000);
+                    } catch(InterruptedException Ie){
+                        Ie.printStackTrace();
+                    }
+                    socket = new Socket();
+                } catch(IOException e){
+                    /* A real error */
+                    e.printStackTrace();
                 }
             }
-            setText();
+            setStatus();
             new Thread(new ClientThread()).start();
         }
 
         private TextView status = findViewById(R.id.status);
 
-        private void setText() {
+        private void setStatus() {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -86,26 +98,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     class ReconnectThread implements Runnable{
 
         @Override
         public void run() {
-            setText();
+            updateUI();
             new Thread(new ConnectThread()).start();
         }
 
         private TextView status = findViewById(R.id.status);
         private EditText msgBox = findViewById(R.id.msgBox);
-        private Button sendBtn = findViewById(R.id.sendBtn);
 
-        private void setText() {
+        private void updateUI() {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String statusStr = "Connecting to server";
+                    String statusStr = "Reconnecting to server";
                     status.setText(statusStr);
                     msgBox.setVisibility(View.GONE);
-                    sendBtn.setVisibility(View.GONE);
                 }
             });
         }
@@ -113,18 +124,19 @@ public class MainActivity extends AppCompatActivity {
 
     class ClientThread implements Runnable{
 
-        @Override
-        public void run() {
-            setText();
-            new Thread(new SocketInThread()).start();
-        }
-
         private TextView chatTitle = findViewById(R.id.chatTitle);
         private TextView chatWindow = findViewById(R.id.chatWindow);
         private EditText msgBox = findViewById(R.id.msgBox);
-        private Button sendBtn = findViewById(R.id.sendBtn);
 
-        private void setText(){
+        @Override
+        public void run() {
+            initUI();
+            new Thread(new SocketInThread()).start();
+            /* Listen to keyboard for enter (send) */
+            msgBox.setOnEditorActionListener(editorListener);
+        }
+
+        private void initUI(){
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -132,15 +144,21 @@ public class MainActivity extends AppCompatActivity {
                     chatWindow.setVisibility(View.VISIBLE);
                     chatWindow.setMovementMethod(new ScrollingMovementMethod());
                     msgBox.setVisibility(View.VISIBLE);
-                    sendBtn.setVisibility(View.VISIBLE);
                 }
             });
         }
-    }
 
-    /* Send button listener */
-    public void sendMessage(View view) {
-        new Thread(new SocketOutThread()).start();
+        /* Keyboard action listener */
+        private TextView.OnEditorActionListener editorListener = new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+                /* Check for the ime action of next (the enter button on keyboard) */
+                if (actionId == EditorInfo.IME_ACTION_NEXT) {
+                    new Thread(new SocketOutThread()).start();
+                }
+                return true;
+            }
+        };
     }
 
     class SocketOutThread implements Runnable {
@@ -150,6 +168,9 @@ public class MainActivity extends AppCompatActivity {
             try {
                 EditText et = findViewById(R.id.msgBox);
                 String str = et.getText().toString();
+                if (str.equals("")){
+                    return;
+                }
                 PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
                 out.println(str);
                 setText(str);
@@ -167,11 +188,15 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
                     chatWindow.append(timeStamp + ": You: " + text + "\n");
-                    msgBox.setText("");
+                    scroll(chatWindow);
+                    if (msgBox.length() > 0) {
+                        msgBox.getText().clear();
+                    }
                 }
             });
         }
     }
+
 
     class SocketInThread implements Runnable {
 
@@ -187,7 +212,6 @@ public class MainActivity extends AppCompatActivity {
                         if (input.equals(CONNECTION_LOST)){
                             socket.close();
                             new Thread(new ReconnectThread()).start();
-                            Log.i(TAG, "End thread");
                             return;
                         }
                     } catch (IOException e) {
@@ -209,8 +233,14 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
                     chatWindow.append(timeStamp + ": Client: " + text + "\n");
+                    scroll(chatWindow);
                 }
             });
         }
+    }
+
+    private void scroll(TextView tv){
+        final int scrollAmount = tv.getLayout().getLineTop(tv.getLineCount()) - tv.getHeight();
+        tv.scrollTo(0, Math.max(scrollAmount, 0));
     }
 }

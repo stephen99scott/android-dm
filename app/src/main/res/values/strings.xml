@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Direct Messaging</string>
     <string name="hint">Type a message</string>
+    <string name="idle">Idle</string>
+    <string name="todo">TODO</string>
+    <string name="group_chat">Group Chat</string>
+    <string name="send_a_message">Send a message.</string>
 </resources>
