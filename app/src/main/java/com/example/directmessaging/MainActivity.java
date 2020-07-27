@@ -1,15 +1,15 @@
 package com.example.directmessaging;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -25,6 +25,7 @@ import java.net.SocketTimeoutException;
 import java.util.Date;
 
 import static java.text.DateFormat.getDateInstance;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -99,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     class ReconnectThread implements Runnable{
 
         @Override
@@ -124,20 +126,52 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    class ClientThread implements Runnable{
 
-        @Override
-        public void run() {
-            setText();
-            new Thread(new SocketInThread()).start();
+    /* disconnects the client from the server and updates the status, should not be its own thread
+          since we don't want to try to reconnect before the client is disconnected */
+    public void disconnect() {
+        TextView status = findViewById(R.id.status);
+        try {
+            Log.i(TAG, "about to close socket");
+            socket.close();
+            Log.i(TAG, "closed socket");
+            String str = "Disconnected";
+            status.setText(str);
+        } catch (Exception e) {
+            Log.i(TAG, "socket somehow already closed");
+            e.printStackTrace();
         }
+    }
 
+
+    class ClientThread implements Runnable{
+        /* Thread that deals with anything client-side, ie. visibility of ui, textwatchers, etc. */
         private TextView chatTitle = findViewById(R.id.chatTitle);
         private TextView chatWindow = findViewById(R.id.chatWindow);
         private EditText msgBox = findViewById(R.id.msgBox);
         private Button sendBtn = findViewById(R.id.sendBtn);
 
-        private void setText(){
+        @Override
+        public void run() {
+            gui_ini();
+            new Thread(new SocketInThread()).start();
+            /* we display the info in the gui, and start checking for send requests */
+            msgBox.setOnEditorActionListener(editorListener);
+        }
+
+        /* keyboard action listener */
+        private TextView.OnEditorActionListener editorListener = new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+                /* check for the ime action of next (the enter button on keyboard) */
+                if (actionId == EditorInfo.IME_ACTION_NEXT) {
+                    new Thread(new SocketOutThread()).start();
+                }
+                return true;
+            }
+        };
+
+        private void gui_ini(){
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -151,10 +185,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     /* Send button listener */
     public void sendMessage(View view) {
         new Thread(new SocketOutThread()).start();
     }
+
 
     class SocketOutThread implements Runnable {
 
@@ -163,6 +199,9 @@ public class MainActivity extends AppCompatActivity {
             try {
                 EditText et = findViewById(R.id.msgBox);
                 String str = et.getText().toString();
+                if (str.equals("")){
+                    return;
+                }
                 PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
                 out.println(str);
                 setText(str);
@@ -180,11 +219,14 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
                     chatWindow.append(timeStamp + ": You: " + text + "\n");
-                    msgBox.setText("");
+                    if (msgBox.length() > 0) {
+                        msgBox.getText().clear();
+                    }
                 }
             });
         }
     }
+
 
     class SocketInThread implements Runnable {
 
@@ -198,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         input = in.readLine();
                         if (input.equals(CONNECTION_LOST)){
-                            socket.close();
+                            disconnect();
                             new Thread(new ReconnectThread()).start();
                             Log.i(TAG, "End thread");
                             return;
