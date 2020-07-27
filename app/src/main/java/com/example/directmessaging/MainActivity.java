@@ -2,13 +2,10 @@ package com.example.directmessaging;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -23,15 +20,16 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.nio.charset.StandardCharsets;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Date;
 
 import static java.text.DateFormat.getDateInstance;
 
-
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getName();
+
     private Socket socket;
 
     private static final int SERVER_PORT = 12345;
@@ -54,35 +52,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     class ConnectThread implements Runnable {
+
         @Override
         public void run() {
-            /* Loop until socket is opened */
+            /* Create socket */
+            socket = new Socket();
+            /* Loop until a connection is made */
             while (true) {
                 try {
-                    socket = new Socket();
-                    socket.connect(sockAddr, 1000);
+                    /* Try to connect for a second */
+                    socket.connect(sockAddr, 2000);
                     break;
-                } catch (Exception e) {
-                    Log.i(TAG, "Failed to connect");
-                    try{
+                } catch (SocketTimeoutException | SocketException Se) {
+                    /* Exception causes socket to close - open new */
+                    try {
                         socket.close();
-                        Log.i(TAG, "Socket closed");
-                    } catch(IOException IOe){
-                        Log.i(TAG, "Failed to close socket");
+                    } catch (IOException IOe) {
+                        IOe.printStackTrace();
                     }
-                }
-                /* we don't need to be attempting to connect constantly, do it once per second */
-                try {
-                    Log.i(TAG, "waiting 1s before trying to connect again");
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
+                    try{
+                        /* Wait before attempting to connect again */
+                        Thread.sleep(1000);
+                    } catch(InterruptedException Ie){
+                        Ie.printStackTrace();
+                    }
+                    socket = new Socket();
+                } catch(IOException e){
+                    /* A real error */
                     e.printStackTrace();
                 }
             }
             setText();
             new Thread(new ClientThread()).start();
         }
-        
+
         private TextView status = findViewById(R.id.status);
 
         private void setText() {
@@ -121,52 +124,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /* disconnects the client from the server and updates the status, should not be its own thread
-          since we don't want to try to reconnect before the client is disconnected */
-    public void disconnect() {
-        TextView status = findViewById(R.id.status);
-        try {
-            Log.i(TAG, "about to close socket");
-            socket.close();
-            Log.i(TAG, "closed socket");
-            String str = "Disconnected";
-            status.setText(str);
-        } catch (Exception e) {
-            Log.i(TAG, "socket somehow already closed");
-            e.printStackTrace();
-        }
-    }
-
     class ClientThread implements Runnable{
-    /* Thread that deals with anything client-side, ie. visibility of ui, textwatchers, etc. */
+
+        @Override
+        public void run() {
+            setText();
+            new Thread(new SocketInThread()).start();
+        }
+
         private TextView chatTitle = findViewById(R.id.chatTitle);
         private TextView chatWindow = findViewById(R.id.chatWindow);
         private EditText msgBox = findViewById(R.id.msgBox);
         private Button sendBtn = findViewById(R.id.sendBtn);
 
-        @Override
-        public void run() {
-            gui_ini();
-            new Thread(new SocketInThread()).start();
-            Log.d("bruh", "starting client thread");
-            /* we display the info in the gui, and start checking for send requests */
-            msgBox.setOnEditorActionListener(editorListener);
-
-        }
-
-        /* keyboard action listener */
-        private TextView.OnEditorActionListener editorListener = new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
-                /* check for the ime action of next (the enter button on keyboard) */
-                if (actionId == EditorInfo.IME_ACTION_NEXT) {
-                    new Thread(new SocketOutThread()).start();
-                }
-                return true;
-            }
-        };
-
-        private void gui_ini() {
+        private void setText(){
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -192,10 +163,6 @@ public class MainActivity extends AppCompatActivity {
             try {
                 EditText et = findViewById(R.id.msgBox);
                 String str = et.getText().toString();
-                if (str.equals("")){
-                    return;
-                }
-                // send the actual message
                 PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
                 out.println(str);
                 setText(str);
@@ -212,15 +179,12 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
-                    chatWindow.append("You: " + text + "\n");
-                    if (msgBox.length() > 0) {
-                        msgBox.getText().clear();
-                    }
+                    chatWindow.append(timeStamp + ": You: " + text + "\n");
+                    msgBox.setText("");
                 }
             });
         }
     }
-
 
     class SocketInThread implements Runnable {
 
@@ -234,8 +198,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         input = in.readLine();
                         if (input.equals(CONNECTION_LOST)){
-                            // socket.close();
-                            disconnect();
+                            socket.close();
                             new Thread(new ReconnectThread()).start();
                             Log.i(TAG, "End thread");
                             return;
@@ -258,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     String timeStamp = getDateInstance().format(new Date());
-                    chatWindow.append("Client: " + text + "\n");
+                    chatWindow.append(timeStamp + ": Client: " + text + "\n");
                 }
             });
         }
