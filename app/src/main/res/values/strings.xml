@@ -5,4 +5,9 @@
     <string name="todo">TODO</string>
     <string name="group_chat">Group Chat</string>
     <string name="send_a_message">Send a message.</string>
+    <string name="chat_name">chat name</string>
+    <string name="previous_message">previous message</string>
+    <string name="last_date">last date</string>
+    <string name="stock_image_for_the_chat_room_icon">stock image for the chat room icon</string>
+    <string name="chat_rooms">Chat Rooms</string>
 </resources>
