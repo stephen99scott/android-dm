@@ -5,4 +5,5 @@
     <color name="colorAccent">#03DAC5</color>
     <!-- my custom dark colour used for the ui stuff (the cards, the background etc) -->
     <color name="uiBlack">#0A0A0A</color>
+    <color name="white">#FFFFFF</color>
 </resources>
