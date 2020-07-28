@@ -61,7 +61,7 @@
         android:textColorHint="#80DCDCDC"
         android:textColorLink="#DCDCDC"
         android:textIsSelectable="false"
-        android:visibility="visible" />
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/buttonBack"
