@@ -6,11 +6,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     private ArrayList<ChatCard> cardList;
+    Button button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,6 +22,17 @@ public class MainActivity extends AppCompatActivity {
 
         createChatList();
         buildRecycleView();
+
+        /* button listener to add a new chat -----------------------------------------------------*/
+        button = (Button) findViewById(R.id.add_chat);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                joinNewRoom();
+            }
+        });
+        /* end button listener to add a new chat -------------------------------------------------*/
+
     }
 
     public void createChatList() {
@@ -61,6 +75,11 @@ public class MainActivity extends AppCompatActivity {
     }
     private void openChatRoom() {
         Intent intent = new Intent(this, ChatRoom.class);
+        startActivity(intent);
+    }
+
+    private void joinNewRoom() {
+        Intent intent = new Intent(this, AddChatRoom.class);
         startActivity(intent);
     }
 
