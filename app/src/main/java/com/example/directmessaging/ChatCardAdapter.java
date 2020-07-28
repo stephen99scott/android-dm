@@ -13,17 +13,38 @@ import java.util.ArrayList;
 
 public class ChatCardAdapter extends RecyclerView.Adapter<ChatCardAdapter.ChatCardViewHolder> {
     private ArrayList<ChatCard> myChatCard;
+    private OnItemClickListener myListener;
+
+    public interface OnItemClickListener {
+        void onItemClick(int position);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        myListener = listener;
+    }
 
     public static class ChatCardViewHolder extends RecyclerView.ViewHolder {
         public TextView nameText;
         public TextView mesPrevText;
         public TextView date;
 
-        public ChatCardViewHolder(@NonNull View itemView) {
+        public ChatCardViewHolder(@NonNull View itemView, final OnItemClickListener listener) {
             super(itemView);
             nameText = itemView.findViewById(R.id.name_text);
             mesPrevText = itemView.findViewById(R.id.mes_prev_text);
             date = itemView.findViewById(R.id.date);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (listener != null) {
+                        int position = getAdapterPosition();
+                        if (position != RecyclerView.NO_POSITION) {
+                            listener.onItemClick(position);
+                        }
+                    }
+                }
+            });
         }
     }
 
@@ -35,7 +56,7 @@ public class ChatCardAdapter extends RecyclerView.Adapter<ChatCardAdapter.ChatCa
     @Override
     public ChatCardViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.chat_card, parent, false);
-        ChatCardViewHolder ccvh = new ChatCardViewHolder(v);
+        ChatCardViewHolder ccvh = new ChatCardViewHolder(v, myListener);
         return ccvh;
     }
 

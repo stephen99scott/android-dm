@@ -12,39 +12,58 @@ import android.widget.Button;
 import java.util.ArrayList;
 
 public class MainView extends AppCompatActivity {
+    private ArrayList<ChatCard> cardList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_view);
 
-        ArrayList<ChatCard> cardList = new ArrayList<>();
+        createChatList();
+        buildRecycleView();
+    }
+
+    public void createChatList() {
+        cardList = new ArrayList<>();
         cardList.add(new ChatCard("name text", "prev message", "July 27th"));
         cardList.add(new ChatCard("name text 2", "prev message 2", "July 28th"));
+        cardList.add(new ChatCard("name text", "prev message", "July 27th"));
+        cardList.add(new ChatCard("name text", "prev message", "July 27th"));
+        cardList.add(new ChatCard("name text 2", "prev message 2", "July 28th"));
+        cardList.add(new ChatCard("name text", "prev message", "July 27th"));
+        cardList.add(new ChatCard("name text", "prev message", "July 27th"));
+        cardList.add(new ChatCard("name text 2", "prev message 2", "July 28th"));
+        cardList.add(new ChatCard("name text", "prev message", "July 27th"));
+        cardList.add(new ChatCard("name text", "prev message", "July 27th"));
+        cardList.add(new ChatCard("name text 2", "prev message 2", "July 28th"));
+        cardList.add(new ChatCard("name text", "prev message", "July 27th"));
+        cardList.add(new ChatCard("name text", "prev message", "July 27th"));
+        cardList.add(new ChatCard("name text 2", "prev message 2", "July 28th"));
+        cardList.add(new ChatCard("name text", "prev message", "July 27th"));
+    }
 
+    public void buildRecycleView() {
         RecyclerView myRecyclerView = findViewById(R.id.chat_list_view);
         /* ensures each element in the recycler view is the same size */
         myRecyclerView.setHasFixedSize(true);
         RecyclerView.LayoutManager myLayoutManager = new LinearLayoutManager(this);
-        RecyclerView.Adapter myAdapter = new ChatCardAdapter(cardList);
+        final ChatCardAdapter myAdapter = new ChatCardAdapter(cardList);
 
         myRecyclerView.setLayoutManager(myLayoutManager);
         myRecyclerView.setAdapter(myAdapter);
 
-        /*
-        Button button = (Button) findViewById(R.id.test_button);
-        button.setOnClickListener(new View.OnClickListener() {
-
+        myAdapter.setOnItemClickListener(new ChatCardAdapter.OnItemClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onItemClick(int position) {
+                //cardList.get(position).changeText("clicked");
+                //myAdapter.notifyItemChanged(position);
                 openChatRoom();
             }
         });
-        */
     }
-
     private void openChatRoom() {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
     }
+
 }

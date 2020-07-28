@@ -11,6 +11,10 @@ public class ChatCard {
         this.date = date;
     }
 
+    public void changeText(String text) {
+        nameText = text;
+    }
+
     public String getNameText() {
         return nameText;
     }
