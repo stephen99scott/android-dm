@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="-1dp"
     app:cardBackgroundColor="#1E1E1E"
     app:cardCornerRadius="0dp">
 
@@ -12,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
 
-        android:layout_marginTop="1dp"
+        android:layout_marginBottom="1dp"
         android:background="#0A0A0A">
 
         <TextView
