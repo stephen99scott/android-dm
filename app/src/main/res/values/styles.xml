@@ -1,10 +1,20 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <!-- to replace the bar on top of the screen, change "...Light.NoActionBar"
+        to "...Light.DarkActionBar" -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+    </style>
+    <!-- this needs to be here because in order to remove focus on username and password fields,
+    the background needs to be on focus, which changes the colour of the background, so we create
+    this style for the background to stop the colour from changing when it is in focus -->
+    <style name="BackgroundEditTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorControlNormal">@color/loginHint</item>
+        <item name="colorControlActivated">@color/white</item>
+        <item name="colorControlHighlight">@color/loginBG</item>
     </style>
 
 </resources>

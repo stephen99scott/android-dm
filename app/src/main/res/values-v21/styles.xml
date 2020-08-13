@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <!-- this line changes the colour of the top status bar, but this requires a higher level
+        api which might not be available to older phones, so this v21/styles xml will be automatically
+        used if the phone is new enough to be able to change this colour, if it's too old of a phone
+        to be able to access the status bar colour then it will use the other styles xml, which
+        just leaves the colour to the default blue -->
+        <item name="android:statusBarColor" tools:ignore="PrivateResource">@color/uiBlack</item>
+    </style>
+</resources>
