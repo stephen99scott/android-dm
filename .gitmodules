@@ -1,0 +1,3 @@
+[submodule "Client"]
+	path = Client
+	url = git@github.com:stephen99scott/android-dm-client
